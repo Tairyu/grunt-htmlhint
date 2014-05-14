@@ -27,7 +27,9 @@ module.exports = function(grunt) {
       all: {
         options: {
           'tag-pair': true,
-          'htmlhintrc': 'test/.htmlhintrc'
+          'must-exist-title': true,
+          'htmlhintrc': 'test/.htmlhintrc',
+          'rulesAbsDir': __dirname + "/rules"
         },
         src: 'test/fixtures/*.html'
       }
