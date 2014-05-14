@@ -1,4 +1,4 @@
-module.export = {
+module.exports = {
   id: 'must-exist-title',
   description: 'title tag must exist header',
   init: function(parser, reporter){
@@ -19,7 +19,7 @@ module.export = {
     }
 
     function onTagEndHead(event){
-      if(isFound){
+      if(!isFound){
         reporter.warn('title tag not exist in head tags', event.line, event.col, self, event.raw);
       }
       parser.removeListener('tagstart', onTagStartInnerHead);
