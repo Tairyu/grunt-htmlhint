@@ -38,10 +38,14 @@ module.exports = function(grunt) {
           HTMLHint.addRule(require(rule));
         });
       }
+
+      delete options.rulesAbsDir;
     }
 
     var force = options.force;
     delete options.force;
+
+    options = grunt.util._.omit(options, function(flag){ return flag === false; });
 
     var hintCount = 0;
     arrFilesSrc.forEach(function( filepath ) {
