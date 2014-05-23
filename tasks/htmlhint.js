@@ -25,6 +25,21 @@ module.exports = function(grunt) {
       delete options.htmlhintrc;
     }
 
+    if (options.rulesAbsDir){
+      var path = require('path');
+      var fs = require('fs');
+      var rulesAbsDir = options.rulesAbsDir;
+
+      if(fs.statSync(rulesAbsDir).isDirectory()){
+        fs.readdirSync(rulesAbsDir).forEach(function(file){
+          if(path.extname(file) !== '.js'){ return; }
+          var rule = path.join(path.relative(__dirname, options.rulesAbsDir), file);
+          grunt.log.writeln('add custom-rule to: ' + rule);
+          HTMLHint.addRule(require(rule));
+        });
+      }
+    }
+
     var force = options.force;
     delete options.force;
 
