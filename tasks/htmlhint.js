@@ -12,10 +12,11 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('htmlhint', 'Validate html files with htmlhint.', function() {
 
+    var _ = require("lodash");
     var HTMLHint  = require("htmlhint").HTMLHint;
     var options = this.options({
         force: false
-      }), 
+      }),
       arrFilesSrc = this.filesSrc,
       verbose = grunt.verbose;
 
@@ -48,6 +49,7 @@ module.exports = function(grunt) {
     options = grunt.util._.omit(options, function(flag){ return flag === false; });
 
     var hintCount = 0;
+    var results = {};
     arrFilesSrc.forEach(function( filepath ) {
       var file = grunt.file.read( filepath ),
         msg = "Linting " + filepath + "...",
@@ -55,6 +57,7 @@ module.exports = function(grunt) {
       if (file.length) {
         messages = HTMLHint.verify(file, options);
         verbose.write( msg );
+        results[filepath] = messages;
         if (messages.length > 0) {
           verbose.or.write( msg );
           grunt.log.error();
@@ -62,17 +65,19 @@ module.exports = function(grunt) {
           verbose.ok();
         }
         messages.forEach(function( message ) {
-          grunt.log.writeln( "[".red + ( "L" + message.line ).yellow + ":".red + ( "C" + message.col ).yellow + "]".red + ' ' + message.message.yellow );
-          var evidence = message.evidence,
-            col = message.col;
-          if (col === 0) {
-            evidence = '?'.inverse.red + evidence;
-          } else if (col > evidence.length) {
-            evidence = evidence + ' '.inverse.red;
-          } else {
-            evidence = evidence.slice(0, col - 1) + evidence[col - 1].inverse.red + evidence.slice(col);
+          if (!options.formatters) {
+            grunt.log.writeln( "[".red + ( "L" + message.line ).yellow + ":".red + ( "C" + message.col ).yellow + "]".red + ' ' + message.message.yellow );
+            var evidence = message.evidence,
+              col = message.col;
+            if (col === 0) {
+              evidence = '?'.inverse.red + evidence;
+            } else if (col > evidence.length) {
+              evidence = evidence + ' '.inverse.red;
+            } else {
+              evidence = evidence.slice(0, col - 1) + evidence[col - 1].inverse.red + evidence.slice(col);
+            }
+            grunt.log.writeln(evidence);
           }
-          grunt.log.writeln(evidence);
           hintCount ++;
         });
       }
@@ -80,6 +85,21 @@ module.exports = function(grunt) {
         grunt.log.writeln( "Skipping empty file " + filepath);
       }
     });
+
+    if (options.formatters && _.isArray(options.formatters)) {
+      options.formatters.forEach(function(def) {
+        if (!def.id || !def.dest) {
+          return;
+        }
+        var formatter = HTMLHint.getFormatter(def.id);
+        var output = formatter.start ? formatter.start() : '';
+        _.each(results, function (messages, filepath) {
+          output += formatter.format(messages, filepath);
+        });
+        output += formatter.end ? formatter.end() : '';
+        grunt.file.write(def.dest, output);
+      });
+    }
 
     if ( hintCount > 0 ) {
       return force;
