@@ -46,8 +46,6 @@ module.exports = function(grunt) {
     var force = options.force;
     delete options.force;
 
-    options = grunt.util._.omit(options, function(flag){ return flag === false; });
-
     var hintCount = 0;
     var results = {};
     arrFilesSrc.forEach(function( filepath ) {
